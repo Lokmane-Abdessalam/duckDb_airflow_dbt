@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: stg_sales
+    description: "Cleaned staging model for sales data"
+    columns:
+      - name: order_id
+        description: "Unique identifier for each order"
+        tests:
+          - unique
+          - not_null
+
+      - name: amount
+        description: "Total order amount in dollars"
+        tests:
+          - not_null
