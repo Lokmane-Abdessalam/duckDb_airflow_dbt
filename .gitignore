@@ -1,3 +1,6 @@
+# DuckDB database files
+*.duckdb
+*.duckdb.wal
 
 target/
 dbt_packages/

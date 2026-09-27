@@ -1,0 +1,7 @@
+duckDb_airflow_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: './my_warehouse.duckdb'
+      threads: 4
