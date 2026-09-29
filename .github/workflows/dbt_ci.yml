@@ -26,7 +26,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run dbt Seed
-        run: dbt seed --profiles-.
+        run: dbt seed --profiles-dir .
 
       - name: Run dbt Models
         run: dbt run --profiles-dir .
