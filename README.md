@@ -1,23 +1,23 @@
+# 🚀 End-to-End Local Modern Data Stack Pipeline (Airflow + dbt + DuckDB + Docker)
 
-# 🚀 Local Modern Data Stack Pipeline (dbt + DuckDB)
-
-A lightweight, production-grade local data pipeline demonstrating Modern Data Stack (MDS) practices using **dbt (data build tool)** and **DuckDB**. This project serves as an educational blueprint for building scalable ELT workflows locally on your PC without the cost or overhead of cloud infrastructure.
+A production-grade, containerized local data pipeline demonstrating Modern Data Stack (MDS) practices. This project uses **Apache Airflow** to orchestrate **dbt (data build tool)** transformations running against a local **DuckDB** data warehouse, entirely containerized via **Docker**.
 
 ---
 
 ## 🛠️ Tech Stack
-* **DuckDB:** A high-performance, embedded SQL database acting as a local data warehouse.
-* **dbt (data build tool):** Used for writing modular, version-controlled SQL transformations and automated data quality tests.
-* **Python:** Used for managing dependencies and executing local queries.
+* **Apache Airflow:** Workflow orchestration engine to automate and monitor the pipeline lifecycle.
+* **dbt (data build tool):** Modular, version-controlled SQL transformations and automated data quality testing.
+* **DuckDB:** High-performance, embedded SQL database acting as a local analytical data warehouse.
+* **Docker & Docker Compose:** Containerization platform ensuring reproducible, cross-platform execution.
 
 ---
 
 ## 📂 Project Structure & Overview
 
-The project is structured following modern data engineering standards, separating raw ingestion from cleaning and final aggregation:
-
 ```text
-duckDb_airflow_dbt/
+duckDb-airflow-dbt/
+├── dags/
+│   └── dbt_pipeline_dag.py    # Airflow DAG orchestrating seed -> run -> test
 ├── models/
 │   ├── stg_sales.sql          # Staging model: Cleans and standardizes raw data
 │   ├── customer_totals.sql    # Aggregation model: Calculates business metrics per customer
@@ -25,7 +25,10 @@ duckDb_airflow_dbt/
 ├── seeds/
 │   └── raw_sales.csv          # Raw data ingestion source (CSV format)
 ├── dbt_project.yml            # Main dbt project configuration file
-└── requirements.txt           # Python package dependencies
+├── profiles.yml               # dbt local database profile connection
+├── requirements.txt           # Python package dependencies
+├── Dockerfile                 # Container setup for standalone dbt execution
+└── docker-compose.yaml        # Multi-container orchestration setup for Airflow
 
 ```
 
@@ -33,74 +36,28 @@ duckDb_airflow_dbt/
 
 ## ⚙️ Setup & Installation Guide (For a Fresh Machine)
 
-If you have cloned this repository onto a new machine, follow these steps to get the pipeline running locally from scratch.
+If you have cloned this repository onto a new machine, follow these steps to get the full orchestrated pipeline running locally from scratch.
 
 ### Prerequisites
 
-* Python (Version 3.8 or higher) installed on your machine.
-* Git installed.
+* **Docker Desktop** installed and running on your machine.
+* **Git** installed.
 
 ### Step 1: Clone the Repository
 
 Open your terminal and clone the project:
 
 ```bash
-git clone https://github.com/Lokmane-Abdessalam/duckDb_airflow_dbt.git
+git clone https://github.com/Lokmane-Abdessalam/duckDb_airflow_dbt
 cd duckDb_airflow_dbt
 
 ```
 
-### Step 2: Create and Activate a Virtual Environment
+### Step 2: Verify Configuration Files
 
-Isolate your project dependencies using a Python virtual environment:
+Ensure your project contains:
 
-```bash
-# Create the virtual environment
-python -m venv .venv
-
-# Activate it
-# On macOS / Linux:
-source .venv/bin/activate
-# On Windows (Command Prompt):
-.venv\Scripts\activate.bat
-# On Windows (PowerShell):
-.venv\Scripts\Activate.ps1
-
-```
-
-### Step 3: Install Dependencies
-
-Create or verify your `requirements.txt` file in the root folder with the following packages:
-
-```text
-dbt-core>=1.8.0
-dbt-duckdb>=1.8.0
-duckdb>=1.0.0
-pandas
-numpy
-
-```
-
-Then install them using `pip`:
-
-```bash
-pip install -r requirements.txt
-
-```
-
-### Step 4: Configure the dbt Profile (`profiles.yml`)
-
-dbt needs to know where to create the local DuckDB database file.
-
-1. Navigate to your user home directory and locate (or create) a hidden folder named `.dbt` (`~/.dbt/`).
-
-```bash
-mkdir ~/.dbt
-nano ~/.dbt/profiles.yml
-```
-
-2. Inside `~/.dbt/`, create or update a file named `profiles.yml` and add the following configuration:
-
+1. **`profiles.yml`** in the root directory configured for DuckDB:
 ```yaml
 duckDb_airflow_dbt:
   target: dev
@@ -112,49 +69,52 @@ duckDb_airflow_dbt:
 
 ```
 
----
 
-## 🏃‍♂️ How to Run the Pipeline
-
-Once your environment and profiles are set up, run the pipeline commands in sequential order:
-
-### 1. Ingest Raw Data (Seed)
-
-Loads your raw CSV data into your local DuckDB database:
-
-```bash
-dbt seed
-
-```
-
-### 2. Run Transformations
-
-Executes your modular SQL models (`stg_sales` and `customer_totals`) to build clean, aggregated tables:
-
-```bash
-dbt run
-
-```
-
-### 3. Run Data Quality Tests
-
-Validates constraints (like uniqueness and null checks) defined in `schema.yml`:
-
-```bash
-dbt test
-
-```
+2. **`docker-compose.yaml`** pointing to your local directories (`dags/`, `models/`, `seeds/`).
 
 ---
 
-## 🔍 Querying the Results
+## 🏃‍♂️ How to Run the Pipeline via Apache Airflow
+
+Instead of running commands manually, we use **Docker Compose** to spin up Apache Airflow locally and orchestrate the pipeline automatically.
+
+### 1. Launch the Airflow Environment
+
+Run the following command in your terminal at the root of the project:
+
+```bash
+docker compose up
+
+```
+
+* *Docker will automatically download the required Airflow images, mount your dbt project files, and start the Airflow webserver.*
+
+### 2. Access the Airflow UI
+
+1. Open your web browser and go to: **`http://localhost:8080`**
+2. Log in using the default credentials:
+* **Username:** `admin`
+* **Password:** `admin` *(or check your terminal logs for generated credentials)*
+
+
+
+### 3. Trigger the Pipeline
+
+1. In the Airflow DAGs dashboard, look for **`local_dbt_duckdb_dag`**.
+2. Toggle the switch from **Pause** to **Active (Unpaused)**.
+3. Click the **Play / Trigger DAG** button.
+4. Click on the DAG name to open the **Graph View** and watch your tasks (`dbt_seed` ➔ `dbt_run` ➔ `dbt_test`) turn green sequentially!
+
+---
+
+## 🔍 Querying the Results Locally
 
 You can query your transformed local data warehouse directly using a short Python script:
 
 ```python
 import duckdb
 
-# Connect to the local warehouse file generated by dbt
+# Connect to the local warehouse file generated by dbt/Airflow
 con = duckdb.connect('my_warehouse.duckdb')
 
 # Query the aggregated customer totals table
@@ -164,3 +124,12 @@ con.close()
 
 ```
 
+### 🐳 `Dockerfile` vs. `docker-compose.yaml`: 
+
+| Feature | `Dockerfile` (Standalone dbt) | `docker-compose.yaml` (Airflow Orchestration) |
+| :--- | :--- | :--- |
+| **Primary Purpose** | Packages and runs **only dbt** in an isolated container to execute your pipeline sequentially from start to finish. | Spins up **Apache Airflow** in a container to manage, schedule, and visually monitor your dbt pipeline via a web UI. |
+| **When to Use It** | When you want a quick, automated test of your dbt models and tests without needing an orchestration tool. | When you want a production-grade Modern Data Stack setup with automated workflows, logs, and a dashboard. |
+| **How It Executes** | Runs commands directly (e.g., `dbt seed && dbt run && dbt test`) and shuts down. | Runs Airflow, which mounts your local files and executes dbt tasks dynamically through Python DAGs. |
+
+* **In short:** Use the **`Dockerfile`** if you just want to containerize your dbt scripts; use **`docker-compose.yaml`** if you want full workflow orchestration with Apache Airflow.

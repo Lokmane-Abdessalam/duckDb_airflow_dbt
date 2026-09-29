@@ -1,0 +1,17 @@
+services:
+  airflow-webserver:
+    image: apache/airflow:2.8.1-python3.10
+    user: "501:0" # Adjust if needed, or omit if you hit permission issues, but this is a standard local setup
+    command: standalone
+    ports:
+      - "8080:8080"
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./models:/opt/airflow/models
+      - ./seeds:/opt/airflow/seeds
+      - ./result:/opt/airflow/result:z
+      - ./dbt_project.yml:/opt/airflow/dbt_project.yml
+      - ./profiles.yml:/opt/airflow/profiles.yml
+      - ./requirements.txt:/opt/airflow/requirements.txt

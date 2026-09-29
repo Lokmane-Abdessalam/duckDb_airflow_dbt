@@ -3,5 +3,5 @@ duckDb_airflow_dbt:
   outputs:
     dev:
       type: duckdb
-      path: './my_warehouse.duckdb'
+      path: '/opt/airflow/result/my_warehouse.duckdb'
       threads: 4
