@@ -64,7 +64,7 @@ duckDb_airflow_dbt:
   outputs:
     dev:
       type: duckdb
-      path: '/opt/airflow/result/my_warehouse.duckdb'
+      path: './result/my_warehouse.duckdb'
       threads: 4
 
 ```
@@ -83,6 +83,8 @@ Instead of running commands manually, we use **Docker Compose** to spin up Apach
 Run the following command in your terminal at the root of the project:
 
 ```bash
+
+mkdir result
 # Set the directory ownership to your current user and the root group
 sudo chown $USER:root result
 
