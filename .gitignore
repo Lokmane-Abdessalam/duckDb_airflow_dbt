@@ -1,7 +1,7 @@
 # DuckDB database files
 *.duckdb
 *.duckdb.wal
-
+result/*
 target/
 dbt_packages/
 logs/

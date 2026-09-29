@@ -64,13 +64,13 @@ duckDb_airflow_dbt:
   outputs:
     dev:
       type: duckdb
-      path: './my_warehouse.duckdb'
+      path: '/opt/airflow/result/my_warehouse.duckdb'
       threads: 4
 
 ```
 
 
-2. **`docker-compose.yaml`** pointing to your local directories (`dags/`, `models/`, `seeds/`).
+2. **`docker-compose.yaml`** pointing to your local directories (`dags/`, `models/`, `seeds/`,`result`).
 
 ---
 
@@ -78,11 +78,17 @@ duckDb_airflow_dbt:
 
 Instead of running commands manually, we use **Docker Compose** to spin up Apache Airflow locally and orchestrate the pipeline automatically.
 
-### 1. Launch the Airflow Environment
+### 1. Launch the Airflow Environment & Permission Setup for the result Directory
 
 Run the following command in your terminal at the root of the project:
 
 ```bash
+# Set the directory ownership to your current user and the root group
+sudo chown $USER:root result
+
+# Apply secure permissions with the setgid bit (2770) so container-created files inherit the group permissions
+sudo chmod 2770 result
+
 docker compose up
 
 ```
